@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sketch</title>
+
+    <style>
+    /* Sets margin to 0, 
+    centers content with flexbox, 
+    and ensures the body takes up the full height of the viewport.
+    reference: ChatGPT. https://chatgpt.com/?oai-dm=1*/  
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    /*Ensures that the canvas width is always 100% of its container, 
+    and the height is adjusted automatically to maintain the aspect ratio. */
+    canvas {
+      width: 100%;
+      height: auto;
+    }
+    </style>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+  </head>
+
+  <body>
+    <script src="sketch.js"></script>
+  </body>
+</html>
