@@ -75,165 +75,219 @@ let groundPoints = [
   {x: 160, y: 990}
 ]
 
+let raindrops = [];
+let t = 0;
+let buffer;
+
+
 function setup() {
   createCanvas(914, 1300); // 2x amplification from the original size (457x1300)
-  colorMode(RGB); 
+
+/*In order to animate the team work, I need to draw all the elements as a background and update the background frequently in the draw function. 
+I used the createGraphics function of p5.js to draw all the elements in the graphics buffer outside the screen and then draw it as image in Draw.
+I need to modify each function to accept buffer.*/
+  buffer = createGraphics(914, 1300);
+
+  for (let i = 0; i < 200; i++) {
+    raindrops.push(new Raindrop());
+  }
+    buffer.background(169, 205, 201); //all RGB parameters are derived from https://pixspy.com/
+    drawBG(buffer, 55, 44, 800, 48, 3, 50, 67, 87); //draw the top background
+    drawGradientRect(buffer, 55, 92, 800, 584, color(210, 210, 198), color(246, 240, 224));  //the gradient white background
+    drawGradientRect(buffer, 55, 676, 800, 560, color(234, 224, 189), color(218, 203, 172));  //the gradient yellow background
+    drawBG(buffer, 80, 1115, 76, 69, 3, 50, 67, 87); //draw signature's background
+    drawBG(buffer, 55, 1235, 800, 15, 3, 50, 67, 87); //draw the bottom background
+    DrawPoints(buffer, 50, 44, 810, 1208, 3, 67, 96, 114); //draw background texture
+
+    //follow this sequence to avoid covering
+    ourGroupName(buffer);
+    drawGround(buffer);
+    drawTreeRoot(buffer);
+    drawSemiCircles(buffer);
+    drawApples(buffer);
+    drawTreeBranches(buffer);
+    shouldDraw = false;
+  colorMode(RGB);
 }
 
-function draw(){
-  background(169, 205, 201); //all RGB parameters are derived from https://pixspy.com/
-  drawBG(55,44,800,48,3,50,67,87); //draw the top background
-  drawGradientRect(55, 92, 800, 584, color(210, 210, 198), color(246, 240, 224));  //the graident white background
-  drawGradientRect(55, 676, 800, 560, color(234, 224, 189), color(218, 203, 172));  //the gradient yellow background
-  drawBG(80,1115,76,69,3,50,67,87); //draw signature's background
-  drawBG(55,1235,800,15,3,50,67,87); //draw the bottom background
-  DrawPoints(50,44,810,1208,3,67,96,114); //draw background texture
-  
-  //follow this sequence to avoid covering
-  ourGroupName();
-  drawGround();
-  drawTreeRoot();
-  drawSemiCircles();
-  drawApples();
-  drawTreeBranches();
-  
+/*
+we know this is not the ideal way to make window responsive. 
+But since most elements in this project have a fixed position, 
+it's hard to change them all in a systematic way through one scale factor.
+Therefore, we are inspired by Chrome's responsive dimension and created a CSS style in html.
+*/
+function windowResized() {
 }
 
-function drawBG(x, y, w, h, a, r, g, b){
-  fill(r, g, b);
-  rect(x, y, w, h, a)
-  noFill;
-  noStroke();
+class Raindrop {
+  constructor() {
+    this.x = random(width);
+    this.y = random(-height, 0);
+    this.speed = random(2, 5);
+    this.len = random(10, 20);
+    this.weight = random(1, 3);
+  }
+
+  update() {
+    // Use Perlin noise to create a smooth variation in horizontal movement
+    this.x += map(noise(this.x * 0.01, this.y * 0.01, t), 0, 1, -0.5, 0.5);
+    this.y += this.speed;
+
+    // Reset the raindrop when it moves out of canvas
+    if (this.y > height) {
+      this.y = random(-200, 0);
+      this.x = random(width-10);
+      this.speed = random(2, 5);
+    }
+  }
+
+  display() {
+    stroke(0, 0, 255); // Blue color for raindrops
+    strokeWeight(this.weight);
+    line(this.x, this.y, this.x, this.y + this.len);
+  }
 }
 
-function drawGradientRect(x, y, w, h, c1, c2){
-    for (let i = 0; i <= h; i+=0.3) {
-      let inter = map(i, 0, h, 0, 1);
-      //lerpColor(c1, c2, amt), blends two colors to find a third color between them.
-      //reference: https://p5js.org/reference/#/p5/lerpColor
-      let c = lerpColor(c1, c2, inter);
-      stroke(c);
-      line(x, y + i, x + w, y + i);
+function draw() {
+  image(buffer, 0, 0); // Group work as a background
+  for (let drop of raindrops) {
+    drop.update();
+    drop.display();
+  }
+}
+
+function drawBG(pg, x, y, w, h, a, r, g, b) {
+  pg.fill(r, g, b);
+  pg.rect(x, y, w, h, a)
+  pg.noFill();
+  pg.noStroke();
+}
+
+function drawGradientRect(pg, x, y, w, h, c1, c2) {
+  for (let i = 0; i <= h; i += 0.3) {
+    let inter = map(i, 0, h, 0, 1);
+    //lerpColor(c1, c2, amt), blends two colors to find a third color between them.
+    //reference: https://p5js.org/reference/#/p5/lerpColor
+    let c = lerpColor(c1, c2, inter);
+    pg.stroke(c);
+    pg.line(x, y + i, x + w, y + i);
   }
 }
 
 //use Perlin Noise to draw background points and texture
-function DrawPoints(sx,sy,rectWidth,rectHeight,density,r,g,b){
-  strokeWeight(1);
+function DrawPoints(pg, sx, sy, rectWidth, rectHeight, density, r, g, b) {
+  pg.strokeWeight(1);
   // Outer loop for potential iterative enhancements, currently runs once
-    for (i = 0; i < 1; i++) {
-       // Set the stroke color to the given RGB values
-      stroke(r, g, b);
-       // Loop through the width of the rectangle
-      for (x = 1; x < rectWidth; x++) {
-         // Loop through the height of the rectangle
-        for (y = 0; y < rectHeight; y++) {
-          // Generate a noise value based on the current position
-          let n = noise(x * 0.02, y * 0.02);
-          if (random(1) > 0.9 - 0.01 * i - n / 5) {
-            //randomize stroke weight to simulate texture   
-            strokeWeight(
-              random(
-                0.2 + density - n / 10,
-                0.3 + density - n / 10
-              )
-            );
-            // Draw the point with a random offset to create a more natural texture
-            point(sx + x + random(-2, 2), sy + y + random(-3, 3));
-          }
+  for (let i = 0; i < 1; i++) {
+    // Set the stroke color to the given RGB values
+    pg.stroke(r, g, b);
+    // Loop through the width of the rectangle
+    for (let x = 1; x < rectWidth; x++) {
+      // Loop through the height of the rectangle
+      for (let y = 0; y < rectHeight; y++) {
+        // Generate a noise value based on the current position
+        let n = noise(x * 0.02, y * 0.02);
+        if (random(1) > 0.9 - 0.01 * i - n / 5) {
+          // Randomize stroke weight to simulate texture
+          pg.strokeWeight(
+            random(
+              0.2 + density - n / 10,
+              0.3 + density - n / 10
+            )
+          );
+          // Draw the point with a random offset to create a more natural texture
+          pg.point(sx + x + random(-2, 2), sy + y + random(-3, 3));
         }
       }
     }
-    // Stop the draw loop to render only once
-    noLoop();
+  }
 }
 
 //our group name
-function ourGroupName(){
-  fill(86,154,115);
-  textSize(15);
-  noStroke();
-  text("Tut 10", 93, 1140);
-  text("Group E", 93, 1160);
-  endShape();
+function ourGroupName(pg) {
+  pg.fill(86, 154, 115);
+  pg.textSize(15);
+  pg.noStroke();
+  pg.text("Tut 10", 93, 1140);
+  pg.text("Group E", 93, 1160);
+  pg.endShape();
 }
 
 //the green ground
-function drawGround() {
-  beginShape();
+function drawGround(pg) {
+  pg.beginShape();
   for (let pt of groundPoints) {
-    stroke(59, 61, 59); //black
-    strokeWeight(6);
-    vertex(pt.x, pt.y);
+    pg.stroke(59, 61, 59); //black
+    pg.strokeWeight(6);
+    pg.vertex(pt.x, pt.y);
   }
-  endShape(CLOSE);
+  pg.endShape(CLOSE);
 }
 
 //tree root, drawn by loops of rectangle
-function drawTreeRoot() {
+function drawTreeRoot(pg) {
   let numRect = 6;
   //The coordinates and size of the first rectangle on the left
-  let baseX = 210, baseY = 975, baseW = 80, baseH = 120; 
+  let baseX = 210, baseY = 975, baseW = 80, baseH = 120;
   let colors = [
-    color(214, 181, 101), //yellow
-    color(247, 73, 73), //red
-    color(94, 161, 116), //green
-    color(230, 198, 114), //yellow
-    color(94, 161, 116), //green
-    color(214, 181, 101) //yellow
+    pg.color(214, 181, 101), //yellow
+    pg.color(247, 73, 73), //red
+    pg.color(94, 161, 116), //green
+    pg.color(230, 198, 114), //yellow
+    pg.color(94, 161, 116), //green
+    pg.color(214, 181, 101) //yellow
   ];
-  for (let i = 0; i < numRect; i++){
-    fill(colors[i]);
-    stroke(59, 61, 59); //black
-    strokeWeight(6);
-    rect(baseX + baseW * i + 7, baseY, baseW, baseH);
+  for (let i = 0; i < numRect; i++) {
+    pg.fill(colors[i]);
+    pg.stroke(59, 61, 59); //black
+    pg.strokeWeight(6);
+    pg.rect(baseX + baseW * i + 7, baseY, baseW, baseH);
   }
 }
 
 //semi-circles in rectangles
-function drawSemiCircles(){
+function drawSemiCircles(pg) {
   let numSemiCircles = 6;
   //set the first semi-circle for looping
   let baseCX = 257, baseCY = 1095, baseCW = 80, baseCH = 60;
   //an color array for different arcs.
   let colors = [
-    color(94, 161, 116), //green
-    color(214, 181, 101), //yellow
-    color(247, 73, 73), //red
-    color(247, 73, 73), //red
-    color(214, 181, 101), //yellow
-    color(94, 161, 116) //green
+    pg.color(94, 161, 116), //green
+    pg.color(214, 181, 101), //yellow
+    pg.color(247, 73, 73), //red
+    pg.color(247, 73, 73), //red
+    pg.color(214, 181, 101), //yellow
+    pg.color(94, 161, 116) //green
   ]
-  for (let i = 0; i < numSemiCircles; i++){
-    stroke(246, 189, 139);
-    strokeWeight(4);
-    fill(colors[i]);
+  for (let i = 0; i < numSemiCircles; i++) {
+    pg.stroke(246, 189, 139);
+    pg.strokeWeight(4);
+    pg.fill(colors[i]);
     //use arc to draw semi-circles. Reference: https://p5js.org/reference/#/p5/arc
-    arc(baseCX + baseCW * i, baseCY, baseCW, baseCH + random(-30, 80), PI, TWO_PI, OPEN);
+    pg.arc(baseCX + baseCW * i, baseCY, baseCW, baseCH + random(-30, 80), PI, TWO_PI, OPEN);
   }
-  noLoop(); //only show once
 }
 
 //tree branches and trunk
-function drawTreeBranches(){
-  for (let seg of segments){
-    stroke(246, 189, 139); //yellow
-    strokeWeight(4);
-    line(seg.x1, seg.y1, seg.x2, seg.y2);
+function drawTreeBranches(pg) {
+  for (let seg of segments) {
+    pg.stroke(246, 189, 139); //yellow
+    pg.strokeWeight(4);
+    pg.line(seg.x1, seg.y1, seg.x2, seg.y2);
   }
 }
 
 // all circles/apples
-function drawApples(){
-  for (let circle of circles){
-    stroke(38, 49, 53); //black
-    strokeWeight(6);
-    noFill();
-    ellipse(circle.x, circle.y, circle.size);
+function drawApples(pg) {
+  for (let circle of circles) {
+    pg.stroke(38, 49, 53); //black
+    pg.strokeWeight(6);
+    pg.noFill();
+    pg.ellipse(circle.x, circle.y, circle.size);
 
     //find points of intersection and calculate their polar coordinates
     let intersections = [];
-    for (let seg of segments){
+    for (let seg of segments) {
       //concat can concatenate two arrays. Here, it concatenates intersections and lineEllipseIntersection.
       //it help us find and record all intersections.
       //reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat
@@ -241,7 +295,7 @@ function drawApples(){
     }
 
     //calculate polar coordinates
-    if (intersections.length === 2){
+    if (intersections.length === 2) {
       //atan2(y, x) calculates the angle formed by a point, the origin, and the positive x-axis.
       //it returns the arc tangent of the given point.
       //reference: https://p5js.org/reference/#/p5/atan2
@@ -250,19 +304,19 @@ function drawApples(){
 
       //create two arcs that constitute the circle according to angle1 and angle2
       //fill green or red in two arcs randomly
-      if (random(1) < 0.5){
-        fill(137, 184, 114); //green
-          //the left semi-circle of each circle.
-          arc(circle.x, circle.y, circle.size, circle.size, angle1, angle2, OPEN);
-        fill(253, 94, 99); //red
-          //the right semi-circle of each circle.
-          arc(circle.x, circle.y, circle.size, circle.size, angle2, angle1 + TWO_PI, OPEN);
-      } 
+      if (random(1) < 0.5) {
+        pg.fill(137, 184, 114); //green
+        //the left semi-circle of each circle.
+        pg.arc(circle.x, circle.y, circle.size, circle.size, angle1, angle2, OPEN);
+        pg.fill(253, 94, 99); //red
+        //the right semi-circle of each circle.
+        pg.arc(circle.x, circle.y, circle.size, circle.size, angle2, angle1 + TWO_PI, OPEN);
+      }
       else {
-        fill(253, 94, 99); //red
-          arc(circle.x, circle.y, circle.size, circle.size, angle1, angle2, OPEN);
-        fill(137, 184, 114); //green
-          arc(circle.x, circle.y, circle.size, circle.size, angle2, angle1 + TWO_PI, OPEN);
+        pg.fill(253, 94, 99); //red
+        pg.arc(circle.x, circle.y, circle.size, circle.size, angle1, angle2, OPEN);
+        pg.fill(137, 184, 114); //green
+        pg.arc(circle.x, circle.y, circle.size, circle.size, angle2, angle1 + TWO_PI, OPEN);
       }
     }
   }
@@ -302,12 +356,12 @@ function lineEllipseIntersection(cx, cy, r, x1, y1, x2, y2) {
     //reference: https://p5js.org/reference/#/p5/sqrt
     let t1 = (-B + sqrt(det)) / (2 * A);
     let t2 = (-B - sqrt(det)) / (2 * A);
-    
+
     if (t1 >= 0 && t1 <= 1) {
-      intersections.push({x: x1 + t1 * dx, y: y1 + t1 * dy});
+      intersections.push({ x: x1 + t1 * dx, y: y1 + t1 * dy });
     }
     if (t2 >= 0 && t2 <= 1) {
-      intersections.push({x: x1 + t2 * dx, y: y1 + t2 * dy});
+      intersections.push({ x: x1 + t2 * dx, y: y1 + t2 * dy });
     }
   }
   return intersections;
