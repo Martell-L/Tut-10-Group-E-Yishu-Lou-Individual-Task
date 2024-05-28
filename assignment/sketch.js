@@ -79,26 +79,31 @@ let raindrops = [];
 let t = 0;
 let buffer;
 
+var xCoord1 = 0;
+var yCoord1 = 0;
+var xCoord2 = 0;
+var yCoord2 = 0;
+
+
 
 function setup() {
   createCanvas(914, 1300); // 2x amplification from the original size (457x1300)
-
+  textSize(64); 
 /*In order to animate the team work, I need to draw all the elements as a background and update the background frequently in the draw function. 
 I used the createGraphics function of p5.js to draw all the elements in the graphics buffer outside the screen and then draw it as image in Draw.
 I need to modify each function to accept buffer.*/
   buffer = createGraphics(914, 1300);
-
   for (let i = 0; i < 200; i++) {
     raindrops.push(new Raindrop());
   }
-    buffer.background(169, 205, 201); //all RGB parameters are derived from https://pixspy.com/
-    drawBG(buffer, 55, 44, 800, 48, 3, 50, 67, 87); //draw the top background
-    drawGradientRect(buffer, 55, 92, 800, 584, color(210, 210, 198), color(246, 240, 224));  //the gradient white background
-    drawGradientRect(buffer, 55, 676, 800, 560, color(234, 224, 189), color(218, 203, 172));  //the gradient yellow background
+    //buffer.background(169, 205, 201); //all RGB parameters are derived from https://pixspy.com/
+    //drawBG(buffer, 55, 44, 800, 48, 3, 50, 67, 87); //draw the top background
+    //the gradient white background
+    //drawGradientRect(buffer, 55, 676, 800, 560, color(234, 224, 189), color(218, 203, 172));  //the gradient yellow background
+    drawGradientRect(buffer, 0, 0, 914, 1300, color(0, 30, 50), color(139, 30, 50));
     drawBG(buffer, 80, 1115, 76, 69, 3, 50, 67, 87); //draw signature's background
-    drawBG(buffer, 55, 1235, 800, 15, 3, 50, 67, 87); //draw the bottom background
-    DrawPoints(buffer, 50, 44, 810, 1208, 3, 67, 96, 114); //draw background texture
-
+    //drawBG(buffer, 55, 1235, 800, 15, 3, 50, 67, 87); //draw the bottom background
+    //DrawPoints(buffer, 50, 44, 810, 1208, 3, 67, 96, 114); //draw background texture
     //follow this sequence to avoid covering
     ourGroupName(buffer);
     drawGround(buffer);
@@ -106,7 +111,17 @@ I need to modify each function to accept buffer.*/
     drawSemiCircles(buffer);
     drawApples(buffer);
     drawTreeBranches(buffer);
-    shouldDraw = false;
+
+    xCoord2 = 0;
+    yCoord2 = height / 2; // Initialize the starting point for the lightning
+
+
+    spx = random(0, 914);
+    spx2 = random(0, 914);
+    spx3 = random(0, 914);
+    spy = random(0, 450);
+    spy3 = random(0, 450);
+
   colorMode(RGB);
 }
 
@@ -145,16 +160,92 @@ class Raindrop {
     stroke(0, 0, 255); // Blue color for raindrops
     strokeWeight(this.weight);
     line(this.x, this.y, this.x, this.y + this.len);
+    noStroke();
   }
 }
 
 function draw() {
+  frameRate(60);
+
   image(buffer, 0, 0); // Group work as a background
+
   for (let drop of raindrops) {
     drop.update();
     drop.display();
   }
+  drawLightning(30,10); // Call the function to draw lightning
+  drawBird(spx, spy);
+  drawBird(spx2, spy);
+  drawBird(spx3, spy3);
+  updatePosition();
 }
+
+function drawLightning(length, duration) {
+  // Loop to create the specified number of segments for the lightning
+  for (var i = 0; i < duration; i++) {
+    // Store the previous coordinates
+    xCoord1 = xCoord2;
+    yCoord1 = yCoord2;
+    // Generate new coordinates with random offset
+    xCoord2 = xCoord1 + int(random(-20, 20));
+    yCoord2 = yCoord1 + int(random(-10, length)); // Control the length of the lightning
+    // Set random stroke weight for the line
+    strokeWeight(random(1, 3));
+    strokeJoin(MITER);
+    // Set the stroke color to a random value between white and yellow
+    stroke(255, 255, random(0, 100)); // White to yellow
+    // Draw the line segment
+    line(xCoord1, yCoord1, xCoord2, yCoord2);
+
+    // Check if the new coordinates are out of the canvas bounds
+    if ((xCoord2 > width) || (xCoord2 < 0) || (yCoord2 > height) || (yCoord2 < 0)) {
+      // Reset the starting point for the next lightning
+      xCoord2 = int(random(0, width));
+      yCoord2 = 0;
+    }
+  }
+}
+
+let flightSpeedX = 3;
+let flightSpeedX2 = -3;
+let flightSpeedX3 = 2;
+let flightSpeedY = 1.5;
+
+let spx;
+let spx2;
+let spx3;
+let spy;
+let spy3;
+
+
+function drawBird(x, y) {
+  text("🦅", x, y);
+}
+
+function updatePosition() {
+  spx += flightSpeedX;
+  spx2 += flightSpeedX2;
+  spx3 += flightSpeedX3;
+  spy += flightSpeedY;
+  spy3 += flightSpeedY;
+
+  if (spx < 35 || spx > 864) {
+    flightSpeedX *= -1;
+  }
+  if (spx2 < 35 || spx2 > 864) { 
+    flightSpeedX2 *= -1;
+  }
+  if (spx3 < 35 || spx3 > 864) { 
+    flightSpeedX3 *= -1;
+  }
+  if (spy < 35 || spy > 450) {
+    flightSpeedY *= -1;
+  }
+  if (spy3 < 35 || spy3 > 450) {
+    flightSpeedY *= -1;
+  }
+}
+
 
 function drawBG(pg, x, y, w, h, a, r, g, b) {
   pg.fill(r, g, b);
