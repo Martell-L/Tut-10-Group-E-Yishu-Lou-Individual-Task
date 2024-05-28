@@ -74,37 +74,33 @@ let groundPoints = [
   {x: 160, y: 1110},
   {x: 160, y: 990}
 ]
-
-let raindrops = [];
-let t = 0;
 let buffer;
 
-var xCoord1 = 0;
-var yCoord1 = 0;
-var xCoord2 = 0;
-var yCoord2 = 0;
 
 
 
 function setup() {
   createCanvas(914, 1300); // 2x amplification from the original size (457x1300)
-  textSize(64); 
+  textSize(50); //Emoji are used as elements in the subsequent animation, so set the size of them here.
+
 /*In order to animate the team work, I need to draw all the elements as a background and update the background frequently in the draw function. 
 I used the createGraphics function of p5.js to draw all the elements in the graphics buffer outside the screen and then draw it as image in Draw.
 I need to modify each function to accept buffer.*/
   buffer = createGraphics(914, 1300);
-  for (let i = 0; i < 200; i++) {
-    raindrops.push(new Raindrop());
-  }
-    //buffer.background(169, 205, 201); //all RGB parameters are derived from https://pixspy.com/
-    //drawBG(buffer, 55, 44, 800, 48, 3, 50, 67, 87); //draw the top background
-    //the gradient white background
-    //drawGradientRect(buffer, 55, 676, 800, 560, color(234, 224, 189), color(218, 203, 172));  //the gradient yellow background
-    drawGradientRect(buffer, 0, 0, 914, 1300, color(0, 30, 50), color(139, 30, 50));
-    drawBG(buffer, 80, 1115, 76, 69, 3, 50, 67, 87); //draw signature's background
-    //drawBG(buffer, 55, 1235, 800, 15, 3, 50, 67, 87); //draw the bottom background
-    //DrawPoints(buffer, 50, 44, 810, 1208, 3, 67, 96, 114); //draw background texture
+
+    /*These elements are not needed in the new animation I want to implement, so I'm invalidating this part of the code.
+    buffer.background(169, 205, 201); //all RGB parameters are derived from https://pixspy.com/
+    drawBG(buffer, 55, 44, 800, 48, 3, 50, 67, 87); //draw the top background
+    drawGradientRect(55, 92, 800, 584, color(210, 210, 198), color(246, 240, 224)); //the gradient white background
+    drawGradientRect(buffer, 55, 676, 800, 560, color(234, 224, 189), color(218, 203, 172));  //the gradient yellow background
+    drawGradientRect(buffer, 0, 0, 914, 1050, color(0, 30, 50), color(139, 30, 50));
+    drawGradientRect(buffer, 0, 1050, 914, 250, color(170,220,250), color(50, 100, 180));
+    drawBG(buffer, 55, 1235, 800, 15, 3, 50, 67, 87); //draw the bottom background
+    DrawPoints(buffer, 50, 44, 810, 1208, 3, 67, 96, 114); //draw background texture
+    */
+
     //follow this sequence to avoid covering
+    drawBG(buffer, 80, 1115, 76, 69, 3, 50, 67, 87); //draw signature's background
     ourGroupName(buffer);
     drawGround(buffer);
     drawTreeRoot(buffer);
@@ -112,14 +108,27 @@ I need to modify each function to accept buffer.*/
     drawApples(buffer);
     drawTreeBranches(buffer);
 
+
+    // Initialize the starting point for the lightning
     xCoord2 = 0;
-    yCoord2 = height / 2; // Initialize the starting point for the lightning
+    yCoord2 = height / 2; 
 
+    // Set the number of clouds to be generated
+    for (let i = 0; i < 20; i++) { 
+      clouds.push(new Cloud(0, 0, 914, 500)); // Set the cloud generation range
+    }
 
+    // Sets the number of raindrops generated
+    for (let i = 0; i < 200; i++) {
+      raindrops.push(new Raindrop());
+    }
+
+    // Initialize the position of each bird to random values within the canvas
     spx = random(0, 914);
     spx2 = random(0, 914);
     spx3 = random(0, 914);
     spy = random(0, 450);
+    spy2 = random(0, 450);
     spy3 = random(0, 450);
 
   colorMode(RGB);
@@ -131,13 +140,58 @@ But since most elements in this project have a fixed position,
 it's hard to change them all in a systematic way through one scale factor.
 Therefore, we are inspired by Chrome's responsive dimension and created a CSS style in html.
 */
+
 function windowResized() {
 }
 
+function draw() {
+  // Modify the framerate to make the animation look faster
+  frameRate(90); 
+
+  // Draw a new background with a linear gradient. This background cannot be added to buffer in order to achieve the overlay effect
+  drawGradientRect2(0, 0, 914, 1050, color(0, 30, 50), color(139, 30, 50));
+  drawGradientRect2(0, 1050, 914, 250, color(170,220,250), color(50, 100, 180));
+
+  // Call the function to draw lightning
+  drawLightning(30,15); 
+
+  // Call the class to draw clouds
+  for (let cloud of clouds) {
+    cloud.move();
+    cloud.display();
+  }
+
+  // Buffer keeps the apple tree, making sure it appears in the background, above the clouds, and above the lightning
+  image(buffer, 0, 0); // Group work as a background
+
+  // Call the class to spawn raindrops
+  for (let drop of raindrops) {
+    drop.update();
+    drop.display();
+  }
+
+  // Draw each bird at its current position
+  drawBird(spx, spy);
+  drawBird(spx2, spy2);
+  drawBird(spx3, spy3);
+  // Update the position of each bird
+  updatePosition();
+
+  //Call the function to call ripples
+  updateRipples();
+}
+
+
+/* This class represents a raindrop object that uses Berlin noise to update its position for smooth horizontal motion and displays the raindrop as a vertical line on the canvas.
+When the raindrop moves out of the canvas, it is reset to a new random position at the top of the canvas. */
+let raindrops = [];
+let t = 0;
 class Raindrop {
   constructor() {
+     // Initialize the raindrop's position
     this.x = random(width);
     this.y = random(-height, 0);
+    // Initialize the raindrop's speed, length, and weight
     this.speed = random(2, 5);
     this.len = random(10, 20);
     this.weight = random(1, 3);
@@ -146,6 +200,7 @@ class Raindrop {
   update() {
     // Use Perlin noise to create a smooth variation in horizontal movement
     this.x += map(noise(this.x * 0.01, this.y * 0.01, t), 0, 1, -0.5, 0.5);
+    // Move the raindrop downwards
     this.y += this.speed;
 
     // Reset the raindrop when it moves out of canvas
@@ -164,22 +219,89 @@ class Raindrop {
   }
 }
 
-function draw() {
-  frameRate(60);
-
-  image(buffer, 0, 0); // Group work as a background
-
-  for (let drop of raindrops) {
-    drop.update();
-    drop.display();
+/*The following sections are used to draw moving clouds.*/
+let clouds = []; // Declare an array to store cloud instances
+class Cloud {
+  constructor(x1, y1, x2, y2) {
+// Randomly initialize the x and y coordinate of the cloud, between (x1,x2) , (y1,y2)
+    this.x = random(x1, x2);
+    this.y = random(y1, y2);
+    this.x1 = x1;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
+// Randomly initialize the x and y direction noise offset, used for Perlin noise function
+    this.xOffset = random(1000); 
+    this.yOffset = random(1000);
   }
-  drawLightning(30,10); // Call the function to draw lightning
-  drawBird(spx, spy);
-  drawBird(spx2, spy);
-  drawBird(spx3, spy3);
-  updatePosition();
+
+  display() {
+    noStroke(); // Don't draw an outline
+    fill(90,100,120); // Set the color of the cloud to a dark grayish-blue
+// Draw multiple circles to form the shape of the cloud. Reference: https://editor.p5js.org/seak/sketches
+    ellipse(this.x, this.y, 24, 24);
+    ellipse(this.x + 10, this.y + 10, 24, 24);
+    ellipse(this.x + 30, this.y + 10, 24, 24);
+    ellipse(this.x + 30, this.y - 10, 24, 24);
+    ellipse(this.x + 20, this.y - 10, 24, 24);
+    ellipse(this.x + 40, this.y, 24, 24);
+  }
+
+  move() {
+// Use Perlin noise function to control horizontal and vertical movement
+    this.x += map(noise(this.xOffset), 0, 1, -1, 1); 
+    this.y += map(noise(this.yOffset), 0, 1, -1, 1); 
+// Increment the x and y direction noise offset to change the noise value
+    this.xOffset += 0.01; 
+    this.yOffset += 0.01; 
+
+  // Check if the cloud has gone out of the specified range
+    if (this.x > this.x2) {
+      this.x = this.x1;
+    } else if (this.x < this.x1) {
+      this.x = this.x2;
+    }
+
+    if (this.y > this.y2) {
+      this.y = this.y1;
+    } else if (this.y < this.y1) {
+      this.y = this.y2;
+    }
+  }
 }
 
+
+/*The following sections are used to add ripples.*/
+let drops = []; 
+function updateRipples() {
+  // Increase the probability of generating ripples
+  if (random(1) < 0.5) {
+    createRipple(50, 1150, 850, 1250, 2);  // Decrease the initial radius
+  }
+
+  // Draw and update the ripple effect for each raindrop
+  for (let i = drops.length - 1; i >= 0; i--) {
+    push();
+    stroke(0, 100); // Ripple edge color
+    noFill();
+    // Draw an elliptical ripple, width is twice the height, make the ripples look more realistic
+    ellipse(drops[i].x, drops[i].y, drops[i].r * 4, drops[i].r * 2); 
+    drops[i].r += 1; // Decrease the radius increment
+    if (drops[i].r > 25) { // Decrease the maximum radius of the ripples
+      drops.splice(i, 1); // Remove this raindrop
+    }
+    pop();
+  }
+}
+// Function to create a ripple
+function createRipple(x1, y1, x2, y2, initialRadius) {
+  let x = random(x1, x2);
+  let y = random(y1, y2);
+  drops.push({x: x, y: y, r: initialRadius});
+}
+
+
+/*The following sections are used to simulate lightning effect.*/
 function drawLightning(length, duration) {
   // Loop to create the specified number of segments for the lightning
   for (var i = 0; i < duration; i++) {
@@ -190,7 +312,7 @@ function drawLightning(length, duration) {
     xCoord2 = xCoord1 + int(random(-20, 20));
     yCoord2 = yCoord1 + int(random(-10, length)); // Control the length of the lightning
     // Set random stroke weight for the line
-    strokeWeight(random(1, 3));
+    strokeWeight(random(2, 6));
     strokeJoin(MITER);
     // Set the stroke color to a random value between white and yellow
     stroke(255, 255, random(0, 100)); // White to yellow
@@ -206,39 +328,53 @@ function drawLightning(length, duration) {
   }
 }
 
+
+/*The following sections are used to add flying birds.*/
+// Initial speed for birds
 let flightSpeedX = 3;
 let flightSpeedX2 = -3;
 let flightSpeedX3 = 2;
 let flightSpeedY = 1.5;
 
+let xCoord1 = 0;
+let yCoord1 = 0;
+let xCoord2 = 0;
+let yCoord2 = 0;
+
 let spx;
 let spx2;
 let spx3;
 let spy;
+let spy2;
 let spy3;
-
 
 function drawBird(x, y) {
   text("🦅", x, y);
 }
 
+// Function to update the position of each bird and reverse direction if needed
 function updatePosition() {
   spx += flightSpeedX;
   spx2 += flightSpeedX2;
   spx3 += flightSpeedX3;
   spy += flightSpeedY;
+  spy2 += flightSpeedY;
   spy3 += flightSpeedY;
 
-  if (spx < 35 || spx > 864) {
+  // Reverse direction if the bird goes out of horizontal and vertical bounds
+  if (spx < 35 || spx > 864) { // 914 - 50 = 864
     flightSpeedX *= -1;
   }
-  if (spx2 < 35 || spx2 > 864) { 
+  if (spx2 < 35 || spx2 > 864) { // 914 - 50 = 864
     flightSpeedX2 *= -1;
   }
-  if (spx3 < 35 || spx3 > 864) { 
+  if (spx3 < 35 || spx3 > 864) { // 914 - 50 = 864
     flightSpeedX3 *= -1;
   }
   if (spy < 35 || spy > 450) {
+    flightSpeedY *= -1;
+  }
+  if (spy2 < 35 || spy2 > 450) {
     flightSpeedY *= -1;
   }
   if (spy3 < 35 || spy3 > 450) {
@@ -246,6 +382,7 @@ function updatePosition() {
   }
 }
 
+/*The following is the original function from the group assignment. */
 
 function drawBG(pg, x, y, w, h, a, r, g, b) {
   pg.fill(r, g, b);
@@ -262,6 +399,17 @@ function drawGradientRect(pg, x, y, w, h, c1, c2) {
     let c = lerpColor(c1, c2, inter);
     pg.stroke(c);
     pg.line(x, y + i, x + w, y + i);
+  }
+}
+
+function drawGradientRect2(x, y, w, h, c1, c2) {
+  for (let i = 0; i <= h; i += 0.3) {
+    let inter = map(i, 0, h, 0, 1);
+    //lerpColor(c1, c2, amt), blends two colors to find a third color between them.
+    //reference: https://p5js.org/reference/#/p5/lerpColor
+    let c = lerpColor(c1, c2, inter);
+    stroke(c);
+    line(x, y + i, x + w, y + i);
   }
 }
 
