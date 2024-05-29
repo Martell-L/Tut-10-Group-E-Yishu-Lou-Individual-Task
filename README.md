@@ -94,5 +94,3 @@ This code defines a `drawBird` function to position a bird emoji ("🦅") at spe
 
 ![Birdss GIF](attachments/Birds.gif)
 
-### Referenced Techniques
-Provide details on any techniques you copied from the internet, including how they work, why you used them, and the source of the technique.
