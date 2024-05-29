@@ -114,7 +114,7 @@ I need to modify each function to accept buffer.*/
     drawApples(buffer);
     drawTreeBranches(buffer);
 
-
+    
     // Initialize the starting point for the lightning
     xCoord2 = 0;
     yCoord2 = height / 2; 
@@ -382,13 +382,13 @@ function updatePosition() {
   spy3 += flightSpeedY;
 
   // Reverse direction if the bird goes out of horizontal and vertical bounds
-  if (spx < 35 || spx > 864) { // 914 - 50 = 864
+  if (spx < 35 || spx > 864) { 
     flightSpeedX *= -1;
   }
-  if (spx2 < 35 || spx2 > 864) { // 914 - 50 = 864
+  if (spx2 < 35 || spx2 > 864) { 
     flightSpeedX2 *= -1;
   }
-  if (spx3 < 35 || spx3 > 864) { // 914 - 50 = 864
+  if (spx3 < 35 || spx3 > 864) { 
     flightSpeedX3 *= -1;
   }
   if (spy < 35 || spy > 450) {
