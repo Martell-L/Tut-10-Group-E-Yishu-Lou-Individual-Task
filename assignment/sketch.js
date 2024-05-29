@@ -75,9 +75,14 @@ let groundPoints = [
   {x: 160, y: 990}
 ]
 let buffer;
+let song;
+let button;
+let isPlaying = false;
 
-
-
+//Preloading audio files, music source: https://open.spotify.com/track/3Yqq8VFzLJxcWRuKIFAfVv
+function preload() {
+  song = loadSound('assets/Rain Sound.mp3');
+}
 
 function setup() {
   createCanvas(914, 1300); // 2x amplification from the original size (457x1300)
@@ -179,6 +184,20 @@ function draw() {
 
   //Call the function to call ripples
   updateRipples();
+
+}
+
+function mousePressed() {
+  togglePlayPause();
+}
+
+function togglePlayPause() {
+  if (song.isPlaying()) {
+    song.pause();
+  } else {
+    song.play();
+  }
+  isPlaying = !isPlaying;
 }
 
 
