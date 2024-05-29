@@ -88,6 +88,7 @@ function setup() {
   createCanvas(914, 1300); // 2x amplification from the original size (457x1300)
   textSize(50); //Emoji are used as elements in the subsequent animation, so set the size of them here.
 
+
 /*In order to animate the team work, I need to draw all the elements as a background and update the background frequently in the draw function. 
 I used the createGraphics function of p5.js to draw all the elements in the graphics buffer outside the screen and then draw it as image in Draw.
 I need to modify each function to accept buffer.*/
@@ -129,12 +130,12 @@ I need to modify each function to accept buffer.*/
     }
 
     // Initialize the position of each bird to random values within the canvas
-    spx = random(0, 914);
-    spx2 = random(0, 914);
-    spx3 = random(0, 914);
-    spy = random(0, 450);
-    spy2 = random(0, 450);
-    spy3 = random(0, 450);
+    spx = random(50, 864);
+    spx2 = random(50, 864);
+    spx3 = random(50, 864);
+    spy = random(50, 450);
+    spy2 = random(50, 450);
+    spy3 = random(50, 450);
 
   colorMode(RGB);
 }
@@ -321,6 +322,11 @@ function createRipple(x1, y1, x2, y2, initialRadius) {
 
 
 /*The following sections are used to simulate lightning effect.*/
+let xCoord1 = 0;
+let yCoord1 = 0;
+let xCoord2 = 0;
+let yCoord2 = 0;
+
 function drawLightning(length, duration) {
   // Loop to create the specified number of segments for the lightning
   for (var i = 0; i < duration; i++) {
@@ -354,11 +360,6 @@ let flightSpeedX = 3;
 let flightSpeedX2 = -3;
 let flightSpeedX3 = 2;
 let flightSpeedY = 1.5;
-
-let xCoord1 = 0;
-let yCoord1 = 0;
-let xCoord2 = 0;
-let yCoord2 = 0;
 
 let spx;
 let spx2;
